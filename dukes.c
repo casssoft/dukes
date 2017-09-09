@@ -141,6 +141,9 @@ void drawTextBox(const char*text) {
         }
         i += 1;
     }
+    if (curCol < maxCol) {
+        for (int j = 0; j < (maxCol - curCol); ++j) printf(" ");
+    }
     printf(" |\n|");
     for (i = 0; i < maxCol + 2; ++i) printf("_");
     printf("|\n");
@@ -188,15 +191,44 @@ const char *KING_INTRO_D[] = {
 int curSprite = 0;
 const char* curString = NULL;
 
+void advanceState(char ch);
+
+void advanceIntro(char ch) {
+    static int knightorking = 0;
+    switch(subscreen) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            subscreen += 1;
+            curString = INTRO_DIALOG[subscreen];
+            break;
+        case 4:
+            if (ch == '1') {
+                knightorking = KNIGHT_INTRO;
+            } else if (ch == '2') {
+                knightorking = KING_INTRO;
+            } else {
+                return; //do nothing
+            }
+            subscreen += 1;
+            curString = INTRO_DIALOG[subscreen];
+            break;
+        case 5:
+            state = knightorking;
+            subscreen = -1;
+            advanceState(0);
+            break;
+    }
+}
 
 
 void advanceState(char ch) {
-  //switch (state) {
-  //    case INTRO:
-  //        drawSprite(0);
-  //        drawTextBox(curString);
-  //}
-
+  switch (state) {
+      case INTRO:
+          advanceIntro(ch);
+          break;
+  }
 }
 
 void draw() {
