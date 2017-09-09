@@ -191,12 +191,19 @@ const char* curString = NULL;
 
 
 void advanceState(char ch) {
-  switch (state) {
-      case INTRO:
-          drawSprite(0);
-          drawTextBox(curString);
-  }
+  //switch (state) {
+  //    case INTRO:
+  //        drawSprite(0);
+  //        drawTextBox(curString);
+  //}
 
+}
+
+void draw() {
+    printf("%c[%dJ", 0x1B, 2); // clear screen
+    printf("%c[%d;%dH", 0x1B, 1, 1);
+    drawSprite(curSprite);
+    drawTextBox(curString);
 }
 
 
