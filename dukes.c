@@ -184,6 +184,14 @@ const char *KNIGHT_INTRO_D[] = {
 "JK JK JK NONE FOR NOW"};
 
 const char *KING_INTRO_D[] = {
+"HMM WHATS THIS?",
+"YOU'RE SAYING WE'VE NEVER MET?",
+"OH HO HO I SEE NOW\n"
+"IT'S TRUE I DON'T RECOGNIZE YOU AT ALL",
+"I DON'T SEE ANYTHING WRONG WITH THAT"
+"GOODBYE",
+
+ 
 "LOL I AM THE KING" };
 
 
@@ -222,11 +230,44 @@ void advanceIntro(char ch) {
     }
 }
 
+void advanceKingIntro(char ch) {
+    static int knightorking = 0;
+    switch(subscreen) {
+        case -1:
+            curSprite = 1;
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            subscreen += 1;
+            curString = KING_INTRO_D[subscreen];
+            break;
+        case 4:
+            if (ch == '1') {
+                knightorking = KNIGHT_INTRO;
+            } else if (ch == '2') {
+                knightorking = KING_INTRO;
+            } else {
+                return; //do nothing
+            }
+            subscreen += 1;
+            curString = INTRO_DIALOG[subscreen];
+            break;
+        case 5:
+            state = knightorking;
+            subscreen = -1;
+            advanceState(0);
+            break;
+    }
+}
 
 void advanceState(char ch) {
   switch (state) {
       case INTRO:
           advanceIntro(ch);
+          break;
+      case KING_INTRO:
+          advanceKingIntro(ch);
           break;
   }
 }
