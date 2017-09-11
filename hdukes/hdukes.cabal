@@ -14,7 +14,7 @@ cabal-version:       >=1.10
 extra-source-files:  README.md
 
 executable hdukes
-  other-modules: Termios
+  other-modules: Termios, Duke
   C-sources: csrc/termops.c
   hs-source-dirs:      src
   main-is:             Main.hs
