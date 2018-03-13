@@ -19,11 +19,6 @@ spritesToNum Knight = 2
 spritesToNum Zach = 3
 spritesToNum x = error ("Bad sprite given " ++ show x)
 
-data Display = Display {
-    dSprite :: Sprite,
-    dText :: String
-}
-
 data Scene = Text {
         teSprite :: Sprite,
         teText :: [String] --lines
