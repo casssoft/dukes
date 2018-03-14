@@ -5,9 +5,10 @@ import Foreign.C.Types
 --import Data.Map (Map)
 --import qualified Data.Map as Map
 import Data.List -- intercalate
+import Items as Items
 
 
-data Sprite = NoSprite | Duke | King | Knight | Zach | TownSquare | Forrest deriving Show
+data Sprite = NoSprite | Duke | Royal | Knight | Zach | TownSquare | Forrest | InventorySprite | TitleScreen deriving Show
 
 --data State = State CInt String
 
@@ -15,11 +16,13 @@ data Sprite = NoSprite | Duke | King | Knight | Zach | TownSquare | Forrest deri
 spritesToNum :: Sprite -> CInt
 spritesToNum NoSprite = -1
 spritesToNum Duke = 0
-spritesToNum King = 1
+spritesToNum Royal = 1
 spritesToNum Knight = 2
 spritesToNum Zach = 3
 spritesToNum TownSquare = 4
 spritesToNum Forrest = 5
+spritesToNum InventorySprite = 6
+spritesToNum TitleScreen = 7
 --spritesToNum x = error ("Bad sprite given " ++ show x)
 
 data Scene = Text {
@@ -47,11 +50,18 @@ townSquareShowCookies :: Scene
 townSquareShowCookies =
     (GenericScene
         (\s -> TownSquare)
-        (\(State {sCookies=cookies}) ->
-            ["Here is your stats:",
-            "Cookies: " ++ (show cookies)])
+        (\(State {sInv=inv}) ->
+            "Here are your items:" :
+            (Items.showItems inv))
         continueWithSpace)
 
+inventoryscene =
+    (GenericScene
+        (\s -> InventorySprite)
+        (\(State {sInv=inv}) ->
+            "Here are your items:" :
+            (Items.showItems inv))
+        continueWithSpace)
 
 continueWithSpace :: State -> Char -> State
 continueWithSpace state ch
@@ -82,17 +92,25 @@ removeCurrentScene :: State -> State
 removeCurrentScene state@(State {curScenes=(curscene:xs)}) =
     state {curScenes=xs}
 
-townsquare =
-    (sceneWithSprite TownSquare
+
+titlescreen =
+    (sceneWithSprite TitleScreen
     [[
-    "Welcome to Dukesvile!"]
-    ]) ++
-    [ townSquareShowCookies ] ++
+    "Press ' ' to continue!"
+    ]])
+
+townsquare =
+--    (sceneWithSprite TownSquare
+--    [[
+--    ]) ++
     [(Choice TownSquare [
+    "Welcome to Dukesvile!",
+    "",
     "Who do you want to visit?",
-    "the Duke (1) or the Knight (2) or the King (3) or Zach10 (4)"]
-    (chooseWithOptions [('1', intro), ('2', knightintro), ('3', kingintro), ('4', zachintro)])
+    "the Duke (1) or the Knight (2) or the Royal (3) or Zach10 (4)"]
+    (chooseWithOptions [('1', dukeintro), ('2', knightintro), ('3', kingintro), ('4', zachintro)])
     )]
+
 
 lostatforrest =
     (sceneWithSprite Forrest
@@ -107,7 +125,7 @@ zachintro =
     "With a great beard",
     "Comes great responsibility"]]) ++
     [(Transition Zach ["Goodbye"] (gotoTransition lostatforrest))]
-intro =
+dukeintro =
     (sceneWithSprite Duke
     [[
     "Hey it's you!",
@@ -123,19 +141,19 @@ intro =
     "I'll introduce you to everyone"]]) ++
     [(Choice Duke [
     "Do you want me to introduce you to",
-    "the Knight (1)? or the King (2) or Zach10 (3)"]
+    "the Knight (1)? or the Royal (2) or Zach10 (3)"]
     (chooseWithOptions [('1', knightintro), ('2', kingintro), ('3', zachintro)])
     )] ++
     [(Text Duke [
     "Oh ok, they are right over there"])]
 
 kingintro =
-    (sceneWithSprite King
+    (sceneWithSprite Royal
     [[
-    "Yo it's me the King!"],
+    "Yo it's me the Royal!"],
     [
     "I'm very busy right now"]]) ++
-    [(Transition King ["Goodbye"] (gotoTransition townsquare))]
+    [(Transition Royal ["Goodbye"] (gotoTransition townsquare))]
 
 knightintro =
     (sceneWithSprite Knight
@@ -145,12 +163,14 @@ knightintro =
     "Are you hungry?",
     "I have a cookie I can give you"]]) ++
     [(Transition Knight ["Here's your cookie!"]
-        ((\state@(State {sCookies=cookies}) ->
-            state{sCookies=(cookies + 1)}) . gotoTransition townsquare))]
+        ((\state@(State {sInv=inv}) ->
+            state{sInv=(Items.addItem inv Items.Cookie)}) . gotoTransition townsquare))]
+
+
 
 data State = State {
     curScenes :: [Scene],
-    sCookies :: Integer
+    sInv :: Items.Inventory
     }
 
 getSprite :: State -> CInt
@@ -164,7 +184,7 @@ getText :: State -> String
 getText (State {curScenes=((Text { teText=text }):xs)}) = formatText text
 getText (State {curScenes=((Choice { cText=text }):xs)}) = formatText text
 getText (State {curScenes=((Transition { trText=text }):xs)}) = formatText text
-getText (State {curScenes=[], sCookies=cookies}) = "GAME OVER cookies: " ++ (show cookies)
+getText (State {curScenes=[], sInv=inv}) = "GAME OVER cookies: " ++ (show (Items.countItem inv Items.Cookie))
 getText state@(State {curScenes=((GenericScene { gText=textfn }):xs)}) = formatText (textfn state)
 --getText (State {}) = error "getText on unknown Scene type"
 
@@ -173,9 +193,11 @@ formatText = intercalate "\n"
 
 
 newState :: State
-newState = (State townsquare 0)
+newState = (State (titlescreen ++ townsquare) [])
 advanceState :: State -> Char -> (State, Bool)
 advanceState x 'q' = (x, True)
+advanceState state@(State {curScenes=xs}) 'i' = (state { curScenes=(inventoryscene:xs) }, False)
+advanceState state@(State {curScenes=xs}) 'h' = (state { curScenes=(titlescreen ++ xs) }, False)
 advanceState state@(State {curScenes=slist}) x = processScenes slist state x
 
 processScenes :: [Scene] -> State -> Char -> (State, Bool)

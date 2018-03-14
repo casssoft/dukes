@@ -66,14 +66,16 @@ static char* getSpriteFromFile(char*filename) {
 }
 
 void loadSprites(int c) {
-    spritesLength = 6;
+    spritesLength = 8;
     sprites = (char**)malloc(sizeof(char*)*spritesLength);
     sprites[0] = getSpriteFromFile("sprites/dukeofvim");
-    sprites[1] = getSpriteFromFile("sprites/king");
+    sprites[1] = getSpriteFromFile("sprites/royal");
     sprites[2] = getSpriteFromFile("sprites/knight");
     sprites[3] = getSpriteFromFile("sprites/zach");
     sprites[4] = getSpriteFromFile("sprites/townsquare");
     sprites[5] = getSpriteFromFile("sprites/forrest");
+    sprites[6] = getSpriteFromFile("sprites/inventory");
+    sprites[7] = getSpriteFromFile("sprites/intro");
 }
 
 static void drawSprite(int num) {
