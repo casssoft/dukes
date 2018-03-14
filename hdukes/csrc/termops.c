@@ -66,16 +66,20 @@ static char* getSpriteFromFile(char*filename) {
 }
 
 void loadSprites(int c) {
-    spritesLength = 4;
+    spritesLength = 6;
     sprites = (char**)malloc(sizeof(char*)*spritesLength);
     sprites[0] = getSpriteFromFile("sprites/dukeofvim");
     sprites[1] = getSpriteFromFile("sprites/king");
     sprites[2] = getSpriteFromFile("sprites/knight");
     sprites[3] = getSpriteFromFile("sprites/zach");
+    sprites[4] = getSpriteFromFile("sprites/townsquare");
+    sprites[5] = getSpriteFromFile("sprites/forrest");
 }
 
 static void drawSprite(int num) {
-    printf("%s", sprites[num]);
+    if (num >= 0) {
+        printf("%s", sprites[num]);
+    }
 }
 
 static void drawTextBox(const char*text) {
@@ -122,10 +126,58 @@ static void drawTextBox(const char*text) {
     printf("|\n");
 }
 
+static void drawText(const char*text) {
+    int maxCol = 0;
+    int i = 0;
+    int curCol = 0;;
+    while(text[i] != 0) {
+        if (text[i] == '\n') {
+            curCol = 0;
+        } else {
+            curCol += 1;
+            if (maxCol < curCol) {
+                maxCol = curCol;
+            }
+        }
+        i += 1;
+    }
+    printf("\n ");
+    for (i = 0; i < maxCol + 2; ++i) printf("_");
+
+    printf("\n|");
+    for (i = 0; i < maxCol + 2; ++i) printf(" ");
+    printf("|\n| ");
+    i = 0;
+    curCol = 0;
+    while (text[i] != 0) {
+        if (text[i] == '\n') {
+            if (curCol < maxCol) {
+                for (int j = 0; j < (maxCol - curCol); ++j) printf(" ");
+            }
+            printf(" |\n| ");
+            curCol = 0;
+        } else {
+            curCol += 1;
+            printf("%c", text[i]);
+        }
+        i += 1;
+    }
+    if (curCol < maxCol) {
+        for (int j = 0; j < (maxCol - curCol); ++j) printf(" ");
+    }
+    printf(" |\n|");
+    for (i = 0; i < maxCol + 2; ++i) printf("_");
+    printf("|\n");
+}
+
 void drawScene(int num, const char* text) {
     printf("%c[%dJ", 0x1B, 2); // clear screen
     printf("%c[%d;%dH", 0x1B, 1, 1);
-    drawSprite(num);
-    drawTextBox(text);
+    if (num != -1) {
+        drawSprite(num);
+        drawTextBox(text);
+    } else {
+        drawText(text);
+    }
 }
 

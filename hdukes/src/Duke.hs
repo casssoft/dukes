@@ -7,17 +7,20 @@ import Foreign.C.Types
 import Data.List -- intercalate
 
 
-data Sprite = Duke | King | Knight | Zach deriving Show
+data Sprite = NoSprite | Duke | King | Knight | Zach | TownSquare | Forrest deriving Show
 
 --data State = State CInt String
 
 
 spritesToNum :: Sprite -> CInt
+spritesToNum NoSprite = -1
 spritesToNum Duke = 0
 spritesToNum King = 1
 spritesToNum Knight = 2
 spritesToNum Zach = 3
-spritesToNum x = error ("Bad sprite given " ++ show x)
+spritesToNum TownSquare = 4
+spritesToNum Forrest = 5
+--spritesToNum x = error ("Bad sprite given " ++ show x)
 
 data Scene = Text {
         teSprite :: Sprite,
@@ -32,7 +35,30 @@ data Scene = Text {
         trSprite :: Sprite,
         trText :: [String], -- lines
         trResolver :: State -> State
+    } |
+    GenericScene {
+        gSprite :: State -> Sprite,
+        gText :: State -> [String],
+        gResolver :: State -> Char -> State
     }
+
+
+townSquareShowCookies :: Scene
+townSquareShowCookies =
+    (GenericScene
+        (\s -> TownSquare)
+        (\(State {sCookies=cookies}) ->
+            ["Here is your stats:",
+            "Cookies: " ++ (show cookies)])
+        continueWithSpace)
+
+
+continueWithSpace :: State -> Char -> State
+continueWithSpace state ch
+    | ch == ' ' = removeCurrentScene state
+    | otherwise = state
+
+--getText (State {curScenes=[], sCookies=cookies}) = "GAME OVER cookies: " ++ (show cookies)
 
 
 sceneWithSprite :: Sprite -> [[String]] -> [Scene]
@@ -56,11 +82,31 @@ removeCurrentScene :: State -> State
 removeCurrentScene state@(State {curScenes=(curscene:xs)}) =
     state {curScenes=xs}
 
+townsquare =
+    (sceneWithSprite TownSquare
+    [[
+    "Welcome to Dukesvile!"]
+    ]) ++
+    [ townSquareShowCookies ] ++
+    [(Choice TownSquare [
+    "Who do you want to visit?",
+    "the Duke (1) or the Knight (2) or the King (3) or Zach10 (4)"]
+    (chooseWithOptions [('1', intro), ('2', knightintro), ('3', kingintro), ('4', zachintro)])
+    )]
+
+lostatforrest =
+    (sceneWithSprite Forrest
+    [[
+    "You are lost in the forrest.."],
+    ["..."],
+    ["You are stil lost in the forrest"]])
+
 zachintro =
     (sceneWithSprite Zach
     [[
     "With a great beard",
-    "Comes great responsibility"]])
+    "Comes great responsibility"]]) ++
+    [(Transition Zach ["Goodbye"] (gotoTransition lostatforrest))]
 intro =
     (sceneWithSprite Duke
     [[
@@ -88,8 +134,8 @@ kingintro =
     [[
     "Yo it's me the King!"],
     [
-    "I'm very busy right now goodbye"]]) ++
-    [(Transition King ["Please talk to Duke again"] (gotoTransition intro))]
+    "I'm very busy right now"]]) ++
+    [(Transition King ["Goodbye"] (gotoTransition townsquare))]
 
 knightintro =
     (sceneWithSprite Knight
@@ -99,9 +145,8 @@ knightintro =
     "Are you hungry?",
     "I have a cookie I can give you"]]) ++
     [(Transition Knight ["Here's your cookie!"]
-        (removeCurrentScene .
-        (\state@(State {sCookies=cookies}) ->
-            state{sCookies=(cookies + 1)})))]
+        ((\state@(State {sCookies=cookies}) ->
+            state{sCookies=(cookies + 1)}) . gotoTransition townsquare))]
 
 data State = State {
     curScenes :: [Scene],
@@ -112,21 +157,23 @@ getSprite :: State -> CInt
 getSprite (State {curScenes=((Text sprite text):xs)}) = spritesToNum sprite
 getSprite (State {curScenes=((Choice { cSprite=sprite }):xs)}) = spritesToNum sprite
 getSprite (State {curScenes=((Transition { trSprite=sprite }):xs)}) = spritesToNum sprite
-getSprite (State {curScenes=[]}) = 0
+getSprite state@(State {curScenes=((GenericScene { gSprite=spritefn }):xs)}) = spritesToNum (spritefn state)
+getSprite (State {curScenes=[]}) = -1
 
 getText :: State -> String
 getText (State {curScenes=((Text { teText=text }):xs)}) = formatText text
 getText (State {curScenes=((Choice { cText=text }):xs)}) = formatText text
 getText (State {curScenes=((Transition { trText=text }):xs)}) = formatText text
 getText (State {curScenes=[], sCookies=cookies}) = "GAME OVER cookies: " ++ (show cookies)
-getText (State {}) = error "getText on unknown Scene type"
+getText state@(State {curScenes=((GenericScene { gText=textfn }):xs)}) = formatText (textfn state)
+--getText (State {}) = error "getText on unknown Scene type"
 
 formatText :: [String] -> String
 formatText = intercalate "\n"
 
 
 newState :: State
-newState = (State intro 0)
+newState = (State townsquare 0)
 advanceState :: State -> Char -> (State, Bool)
 advanceState x 'q' = (x, True)
 advanceState state@(State {curScenes=slist}) x = processScenes slist state x
@@ -145,3 +192,6 @@ processScenes (Choice {cResolver=resolvefunc}:xs) state ch =
 processScenes (Transition {trResolver=resolvefunc}:xs) state ch
     | ch == ' ' = ((resolvefunc state), False)
     | otherwise = (state, False)
+
+processScenes (GenericScene {gResolver=resolvefunc}:xs) state ch =
+    ((resolvefunc state ch), False)
