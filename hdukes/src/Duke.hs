@@ -55,7 +55,7 @@ data Scene =
 emptyNPC = (NPCState False)
 
 data NPCState = NPCState {
-    haveMet :: Bool
+    hasMet :: Bool
 }
 
 data State = State {
@@ -98,12 +98,30 @@ sceneWithSprite sprite (x:xs) =
 sceneWithSprite sprite [] = []
 
 
+getNPC :: Sprite -> State -> NPCState
+getNPC Duke state = dukeState state
+getNPC Knight state = knightState state
+getNPC Royal state = royalState state
+getNPC Zach state = zachState state
+--getNPCStateFromSprite state x = emptyNPC should never happen we are reusing
+
+setNPC :: Sprite -> State -> NPCState -> State
+setNPC Duke state npc = state { dukeState=npc }
+setNPC Knight state npc = state { knightState=npc }
+setNPC Royal state npc = state { royalState=npc }
+setNPC Zach state npc = state { zachState=npc }
 
 chooseWithOptions :: [(Char, [Scene])] -> State -> Char -> State
 chooseWithOptions [] state ch = state
 chooseWithOptions ((opch, scenes):xs) state@(State {curScenes=(choice:cscenes)})  ch
     | opch == ch = state {curScenes=(cscenes ++ scenes)}
     | otherwise = chooseWithOptions xs state ch
+
+chooseNPC :: [(Char, State -> [Scene])] -> State -> Char -> State
+chooseNPC [] state ch = state
+chooseNPC ((opch, npcfunc):xs) state@(State {curScenes=(choice:cscenes)}) ch
+    | opch == ch = state {curScenes=(cscenes ++ (npcfunc state))}
+    | otherwise = chooseNPC xs state ch
 
 gotoTransition :: [Scene] -> State -> State
 gotoTransition newstates state@(State {curScenes=(transition:cscenes)}) =
