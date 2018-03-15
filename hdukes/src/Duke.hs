@@ -6,6 +6,8 @@ import Foreign.C.Types
 --import qualified Data.Map as Map
 import Data.List -- intercalate
 import Items as Items
+import qualified Data.Set as Set
+
 
 
 data Sprite =
@@ -21,8 +23,6 @@ data Sprite =
     Lake |
     FeetInLake |
     Clearing deriving Show
-
---data State = State CInt String
 
 
 spritesToNum :: Sprite -> String
@@ -67,20 +67,19 @@ data Scene =
     }
 
 
-emptyNPC = (NPCState False)
-
-data NPCState = NPCState {
-    hasMet :: Bool
-}
-
 data State = State {
     curScenes :: [Scene],
     sInv :: Items.Inventory,
-    dukeState :: NPCState,
-    knightState :: NPCState,
-    royalState :: NPCState,
-    zachState :: NPCState
+    hasDone :: Set.Set String -- TODO String or enum?
 }
+
+stateHasDone :: String -> State -> Bool
+stateHasDone thing (State {hasDone=doneset}) =
+    Set.member thing doneset
+
+setHasDone :: String -> State -> State
+setHasDone thing state@(State {hasDone=doneset}) =
+    state { hasDone=( Set.insert thing doneset )}
 
 
 inventoryscene =
@@ -111,20 +110,6 @@ sceneWithSprite :: Sprite -> [[String]] -> [Scene]
 sceneWithSprite sprite (x:xs) =
     (Text sprite x):(sceneWithSprite sprite xs)
 sceneWithSprite sprite [] = []
-
-
-getNPC :: Sprite -> State -> NPCState
-getNPC Duke state = dukeState state
-getNPC Knight state = knightState state
-getNPC Royal state = royalState state
-getNPC Zach state = zachState state
---getNPCStateFromSprite state x = emptyNPC should never happen we are reusing
-
-setNPC :: Sprite -> State -> NPCState -> State
-setNPC Duke state npc = state { dukeState=npc }
-setNPC Knight state npc = state { knightState=npc }
-setNPC Royal state npc = state { royalState=npc }
-setNPC Zach state npc = state { zachState=npc }
 
 chooseWithOptions :: [(Char, [Scene])] -> State -> Char -> State
 chooseWithOptions [] state ch = state

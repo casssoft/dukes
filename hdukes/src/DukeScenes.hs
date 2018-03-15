@@ -7,6 +7,7 @@ import Foreign.C.Types
 import Data.List -- intercalate
 import Items as Items
 import Duke
+import qualified Data.Set as Set
 
 
 newState :: State
@@ -14,42 +15,38 @@ newState :: State
 newState = (State
     (titlescreen : townsquare) -- title then town
     [] -- empty inventory
-    emptyNPC -- duke
-    emptyNPC -- knight
-    emptyNPC -- royal
-    emptyNPC -- zach
+    Set.empty -- empty hasDone
     )
 
 -- NPC logic
-talkTo :: Sprite -> State -> [Scene]
-talkTo sprite state = npcToScene sprite (getNPC sprite state)
-setHasMet :: Sprite -> State -> State
-setHasMet sprite state = setNPC sprite state ((getNPC sprite state) { hasMet = True})
-
-npcToScene :: Sprite -> NPCState -> [Scene]
-npcToScene Duke (NPCState { hasMet= False }) =
-    dukeintro
-npcToScene Duke (NPCState { hasMet= True }) =
-    dukeNormal
-
-npcToScene Knight (NPCState { hasMet= True }) =
-    knightNormal
-npcToScene Knight (NPCState { hasMet = False }) =
-    knightintro
-
-npcToScene Royal (NPCState { hasMet = True }) =
-    royalNormal
-
-npcToScene Royal (NPCState { hasMet = False }) =
-    royalintro
-
-npcToScene Zach state =
-    zachintro
+talkTo :: String -> State -> [Scene]
+talkTo person state =
+    if stateHasDone ("met" ++ person) state
+        then hasMetScenes person
+        else notMetScenes person
 
 
-ifHasMet :: Sprite -> (State -> State) -> (State -> State) -> State -> State
-ifHasMet sprite func1 func2 state =
-    if hasMet (getNPC sprite state)
+notMetScenes :: String -> [Scene]
+hasMetScenes :: String -> [Scene]
+
+notMetScenes p
+    | p == "Duke" = dukeintro
+    | p == "Knight" = knightintro
+    | p == "Royal" = royalintro
+    | p == "Zach" = zachintro
+
+hasMetScenes p
+    | p == "Duke" = dukeNormal
+    | p == "Knight" = knightNormal
+    | p == "Royal" = royalNormal
+    | p == "Zach" = zachintro
+
+setHasMet :: String -> State -> State
+setHasMet person = setHasDone ("met" ++ person)
+
+ifHasMet :: String -> (State -> State) -> (State -> State) -> State -> State
+ifHasMet person func1 func2 state =
+    if stateHasDone ("met" ++ person) state
         then func1 state
         else func2 state
 
@@ -67,10 +64,10 @@ townsquare =
     "",
     "Or you can visit the forrest (f)"]
     (chooseNPC [
-        ('1', talkTo Duke),
-        ('2', talkTo Knight),
-        ('3', talkTo Royal),
-        ('4', talkTo Zach),
+        ('1', talkTo "Duke"),
+        ('2', talkTo "Knight"),
+        ('3', talkTo "Royal"),
+        ('4', talkTo "Zach"),
         ('f', (\s -> lostatforrest))])
 --, ('2', knightintro), ('3', kingintro), ('4', zachintro)])
     )]
@@ -107,7 +104,7 @@ foundyourwayback =
 walkaroundthelake =
     [(Text Lake ["Hmm this lake looks the same from this angle too"]),
     (Transition Lake ["Who's that?"]
-        (ifHasMet Royal (gotoTransition royallakemet) (gotoTransition royallakeintro)))]
+        (ifHasMet "Royal" (gotoTransition royallakemet) (gotoTransition royallakeintro)))]
 
 royallakemet =
     (sceneWithSprite Royal
@@ -126,7 +123,7 @@ royallakeintro =
     "..."],
     ["Yeah I'm just hanging out here alone bye"]]) ++
     [(Transition Lake ["That's rude... I'll just keep walking"]
-        (setHasMet Royal . gotoTransition lakescene))] --todo should this count as a meeting?
+        (setHasMet "Royal" . gotoTransition lakescene))] --todo should this count as a meeting?
 
 
 feetinwater =
@@ -159,7 +156,7 @@ dukeintro =
         "Hey it's you!",
         "...",
         "Come on press space!"]
-        (removeCurrentScene . (setHasMet Duke))) :
+        (removeCurrentScene . (setHasMet "Duke"))) :
     (sceneWithSprite Duke
     [[
     "My name is Dukeling",
@@ -197,7 +194,7 @@ royalintro =
     "I'm very busy right now"]]) ++
     [(Transition Royal
     ["Goodbye"]
-    (setHasMet Royal . gotoTransition townsquare))]
+    (setHasMet "Royal" . gotoTransition townsquare))]
 
 
 
@@ -222,4 +219,4 @@ knightintro =
     [(Transition Knight ["Here's your cookie!"]
     (addItemToState Items.Cookie
     . gotoTransition townsquare
-    . setHasMet Knight))]
+    . setHasMet "Knight"))]
