@@ -52,10 +52,21 @@ data Scene =
     }
 
 
+emptyNPC = (NPCState False)
+
+data NPCState = NPCState {
+    haveMet :: Bool
+}
+
 data State = State {
     curScenes :: [Scene],
-    sInv :: Items.Inventory
+    sInv :: Items.Inventory,
+    dukeState :: NPCState,
+    knightState :: NPCState,
+    royalState :: NPCState,
+    zachState :: NPCState
 }
+
 
 inventoryscene =
     (MetaMenuScene

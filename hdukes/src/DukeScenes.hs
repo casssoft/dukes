@@ -10,7 +10,15 @@ import Duke
 
 
 newState :: State
-newState = (State (titlescreen : townsquare) [])
+
+newState = (State
+    (titlescreen : townsquare) -- title then town
+    [] -- empty inventory
+    emptyNPC -- duke
+    emptyNPC -- knight
+    emptyNPC -- royal
+    emptyNPC -- zach
+    )
 
 townsquare =
     [(Choice TownSquare [
