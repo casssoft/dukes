@@ -17,4 +17,4 @@ countItem [] item = 0
 
 showItems :: Inventory -> [String]
 showItems (x:xs) = (show x):(showItems xs)
-showItems [] = ["--END--"]
+showItems [] = []

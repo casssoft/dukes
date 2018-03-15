@@ -3,6 +3,7 @@ import Control.Exception
 import System.IO
 import Termios as Termios
 import Duke as Duke
+import DukeScenes as DukeScenes
 import Control.Monad (when)
 
 
@@ -10,7 +11,7 @@ import Control.Monad (when)
 main = do
     Termios.set_conio_terminal_mode 0
     Termios.loadSprites 0
-    run_state Duke.newState
+    run_state DukeScenes.newState
     Termios.reset_terminal_mode 0
 
 

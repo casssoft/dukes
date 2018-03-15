@@ -25,42 +25,52 @@ spritesToNum InventorySprite = 6
 spritesToNum TitleScreen = 7
 --spritesToNum x = error ("Bad sprite given " ++ show x)
 
-data Scene = Text {
+data Scene =
+    Text { -- Display text
         teSprite :: Sprite,
         teText :: [String] --lines
     } |
-    Choice {
+    Choice { -- Display text and do something based on char
         cSprite :: Sprite,
         cText :: [String],
         cResolver :: State -> Char -> State
     } |
-    Transition {
+    Transition { -- Display and change the state
         trSprite :: Sprite,
         trText :: [String], -- lines
         trResolver :: State -> State
     } |
-    GenericScene {
+    GenericScene { -- Everything dependent on state (do whatever)
         gSprite :: State -> Sprite,
         gText :: State -> [String],
         gResolver :: State -> Char -> State
+    } |
+    MetaMenuScene { -- Do whatever but don't be interrupted by 'i' or 'h' (for inv and help menus)
+        mmSprite :: State -> Sprite,
+        mmText :: State -> [String],
+        mmResolver :: State -> Char -> State
     }
 
 
-townSquareShowCookies :: Scene
-townSquareShowCookies =
-    (GenericScene
-        (\s -> TownSquare)
-        (\(State {sInv=inv}) ->
-            "Here are your items:" :
-            (Items.showItems inv))
-        continueWithSpace)
+data State = State {
+    curScenes :: [Scene],
+    sInv :: Items.Inventory
+}
 
 inventoryscene =
-    (GenericScene
+    (MetaMenuScene
         (\s -> InventorySprite)
         (\(State {sInv=inv}) ->
             "Here are your items:" :
-            (Items.showItems inv))
+            "-----------------" :
+            (Items.showItems inv) ++
+            ["-----------------"])
+        continueWithSpace)
+
+titlescreen =
+    (MetaMenuScene
+        (\s -> TitleScreen)
+        (\s -> [ "Press ' ' to continue!" ])
         continueWithSpace)
 
 continueWithSpace :: State -> Char -> State
@@ -93,127 +103,60 @@ removeCurrentScene state@(State {curScenes=(curscene:xs)}) =
     state {curScenes=xs}
 
 
-titlescreen =
-    (sceneWithSprite TitleScreen
-    [[
-    "Press ' ' to continue!"
-    ]])
-
-townsquare =
---    (sceneWithSprite TownSquare
---    [[
---    ]) ++
-    [(Choice TownSquare [
-    "Welcome to Dukesvile!",
-    "",
-    "Who do you want to visit?",
-    "the Duke (1) or the Knight (2) or the Royal (3) or Zach10 (4)"]
-    (chooseWithOptions [('1', dukeintro), ('2', knightintro), ('3', kingintro), ('4', zachintro)])
-    )]
-
-
-lostatforrest =
-    (sceneWithSprite Forrest
-    [[
-    "You are lost in the forrest.."],
-    ["..."],
-    ["You are stil lost in the forrest"]])
-
-zachintro =
-    (sceneWithSprite Zach
-    [[
-    "With a great beard",
-    "Comes great responsibility"]]) ++
-    [(Transition Zach ["Goodbye"] (gotoTransition lostatforrest))]
-dukeintro =
-    (sceneWithSprite Duke
-    [[
-    "Hey it's you!",
-    "...",
-    "Come on press space!"],
-    [
-    "My name is Dukeling",
-    "I'm sure you already know that though"],
-    [
-    "Oh you don't?"],
-    [
-    "Ahh I guess you are new here",
-    "I'll introduce you to everyone"]]) ++
-    [(Choice Duke [
-    "Do you want me to introduce you to",
-    "the Knight (1)? or the Royal (2) or Zach10 (3)"]
-    (chooseWithOptions [('1', knightintro), ('2', kingintro), ('3', zachintro)])
-    )] ++
-    [(Text Duke [
-    "Oh ok, they are right over there"])]
-
-kingintro =
-    (sceneWithSprite Royal
-    [[
-    "Yo it's me the Royal!"],
-    [
-    "I'm very busy right now"]]) ++
-    [(Transition Royal ["Goodbye"] (gotoTransition townsquare))]
-
-knightintro =
-    (sceneWithSprite Knight
-    [[
-    "Yes man I am the Knight..."],
-    [
-    "Are you hungry?",
-    "I have a cookie I can give you"]]) ++
-    [(Transition Knight ["Here's your cookie!"]
-        ((\state@(State {sInv=inv}) ->
-            state{sInv=(Items.addItem inv Items.Cookie)}) . gotoTransition townsquare))]
-
-
-
-data State = State {
-    curScenes :: [Scene],
-    sInv :: Items.Inventory
-    }
 
 getSprite :: State -> CInt
 getSprite (State {curScenes=((Text sprite text):xs)}) = spritesToNum sprite
 getSprite (State {curScenes=((Choice { cSprite=sprite }):xs)}) = spritesToNum sprite
 getSprite (State {curScenes=((Transition { trSprite=sprite }):xs)}) = spritesToNum sprite
 getSprite state@(State {curScenes=((GenericScene { gSprite=spritefn }):xs)}) = spritesToNum (spritefn state)
+getSprite state@(State {curScenes=((MetaMenuScene { mmSprite=spritefn }):xs)}) = spritesToNum (spritefn state)
 getSprite (State {curScenes=[]}) = -1
 
 getText :: State -> String
 getText (State {curScenes=((Text { teText=text }):xs)}) = formatText text
 getText (State {curScenes=((Choice { cText=text }):xs)}) = formatText text
 getText (State {curScenes=((Transition { trText=text }):xs)}) = formatText text
-getText (State {curScenes=[], sInv=inv}) = "GAME OVER cookies: " ++ (show (Items.countItem inv Items.Cookie))
 getText state@(State {curScenes=((GenericScene { gText=textfn }):xs)}) = formatText (textfn state)
+getText state@(State {curScenes=((MetaMenuScene { mmText=textfn }):xs)}) = formatText (textfn state)
+getText (State {curScenes=[], sInv=inv}) = "GAME OVER cookies: " ++ (show (Items.countItem inv Items.Cookie))
 --getText (State {}) = error "getText on unknown Scene type"
 
 formatText :: [String] -> String
 formatText = intercalate "\n"
 
 
-newState :: State
-newState = (State (titlescreen ++ townsquare) [])
 advanceState :: State -> Char -> (State, Bool)
 advanceState x 'q' = (x, True)
-advanceState state@(State {curScenes=xs}) 'i' = (state { curScenes=(inventoryscene:xs) }, False)
-advanceState state@(State {curScenes=xs}) 'h' = (state { curScenes=(titlescreen ++ xs) }, False)
-advanceState state@(State {curScenes=slist}) x = processScenes slist state x
+advanceState state@(State {curScenes=[]}) x = (state, True)
+advanceState state@(State {curScenes=slist}) x = (processScenes slist state x, False)
 
-processScenes :: [Scene] -> State -> Char -> (State, Bool)
+processScenes :: [Scene] -> State -> Char -> State
 
+-- first handle meta menus
+processScenes (MetaMenuScene {mmResolver=resolvefunc}:xs) state ch =
+    resolvefunc state ch
+
+-- spawn meta menus
+processScenes slist state 'i' =
+    state {curScenes=(inventoryscene : slist)}
+
+processScenes slist state 'h' =
+    state {curScenes=(titlescreen : slist)}
+
+-- do everything else
 processScenes (Text {}:xs) state ch
-    | ch == ' ' = (state { curScenes=xs }, False)
-    | otherwise = (state, False)
-
-processScenes [] state ch = (state, True)
+    | ch == ' ' = state { curScenes=xs }
+    | otherwise = state
 
 processScenes (Choice {cResolver=resolvefunc}:xs) state ch =
-    ((resolvefunc state ch), False)
+    resolvefunc state ch
 
 processScenes (Transition {trResolver=resolvefunc}:xs) state ch
-    | ch == ' ' = ((resolvefunc state), False)
-    | otherwise = (state, False)
+    | ch == ' ' = resolvefunc state
+    | otherwise = state
 
 processScenes (GenericScene {gResolver=resolvefunc}:xs) state ch =
-    ((resolvefunc state ch), False)
+    resolvefunc state ch
+
+--processScenes [] state ch = state Should never happen, since we pattern match it out in advance State
+
