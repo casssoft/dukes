@@ -45,6 +45,14 @@ npcToScene Royal (NPCState { hasMet = False }) =
 
 npcToScene Zach state =
     zachintro
+
+
+ifHasMet :: Sprite -> (State -> State) -> (State -> State) -> State -> State
+ifHasMet sprite func1 func2 state =
+    if hasMet (getNPC sprite state)
+        then func1 state
+        else func2 state
+
 --npcToScene Zach (NPCState { hasMet = True }) =
 --    zachintro
 --npcToScene Zach (NPCState { hasMet = False }) =
@@ -86,7 +94,7 @@ lakescene =
     [ (Choice Lake ["What a pristine lake...", "(1) Walk back (2) Walk around the lake (3) Dip feet"]
     (chooseWithOptions [
         ('1', foundyourwayback),
-        ('2', lostatforrest), -- TODO
+        ('2', walkaroundthelake), -- TODO
         ('3', feetinwater)]
         ))]
 
@@ -95,6 +103,31 @@ foundyourwayback =
     [(Text Forrest ["I think the town was this way..."]),
     (Transition Forrest ["Is that it over there?"]
         (gotoTransition townsquare))]
+
+walkaroundthelake =
+    [(Text Lake ["Hmm this lake looks the same from this angle too"]),
+    (Transition Lake ["Who's that?"]
+        (ifHasMet Royal (gotoTransition royallakemet) (gotoTransition royallakeintro)))]
+
+royallakemet =
+    (sceneWithSprite Royal
+    [[
+    "~Huh darn they found me~",
+    "Heeey how are you doing?"],
+    ["That's cool...",
+    "Yeah I'm just hanging out here alone bye"]]) ++
+    [(Transition Lake ["I'll just keep walking"]
+        (gotoTransition lakescene))]
+
+royallakeintro =
+    (sceneWithSprite Royal
+    [[
+    "Hello I'm Royal",
+    "..."],
+    ["Yeah I'm just hanging out here alone bye"]]) ++
+    [(Transition Lake ["That's rude... I'll just keep walking"]
+        (setHasMet Royal . gotoTransition lakescene))] --todo should this count as a meeting?
+
 
 feetinwater =
     [(Text FeetInLake ["You dip your feet in the cool water of the lake."]),
@@ -148,9 +181,11 @@ dukeintro =
 
 -- Royal NPC
 royalNormal =
-    [(Transition Royal
+    [(Text Royal
         ["Hey...",
-        "I'm still pretty busy.."]
+        "I'm still pretty busy.."]),
+     (Transition Royal
+        ["Go play in the forrest or something"]
         (gotoTransition townsquare))]
 
 
