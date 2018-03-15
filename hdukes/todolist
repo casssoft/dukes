@@ -1,0 +1,2 @@
+Fix hasMet system to be more independent (maybe map of has done strings?)
+Make adding sprites more automatic (maybe get rid of sprite enum and just use string?)
