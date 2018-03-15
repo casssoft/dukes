@@ -48,7 +48,10 @@ static char* getSpriteFromFile(char*filename) {
     char *buffer;
 
     fp = fopen (filename, "rb" );
-    if( !fp ) perror(filename),exit(1);
+    if( !fp ) {
+        perror(filename);
+        return 0;
+    }
 
     fseek( fp , 0L , SEEK_END);
     lSize = ftell( fp );
@@ -56,31 +59,42 @@ static char* getSpriteFromFile(char*filename) {
 
     /* allocate memory for entire content */
     buffer = calloc( 1, lSize+1 );
-    if( !buffer ) fclose(fp),fputs("memory alloc fails",stderr),exit(1);
+    if( !buffer ) {
+        fclose(fp),fputs("memory alloc fails",stderr);
+        return 0;
+    }
 
     /* copy the file into the buffer */
-    if( 1!=fread( buffer , lSize, 1 , fp) )
-      fclose(fp),free(buffer),fputs("entire read fails",stderr),exit(1);
+    if( 1!=fread( buffer , lSize, 1 , fp) ) {
+      fclose(fp),free(buffer),fputs("entire read fails",stderr);
+      return 0;
+    }
     fclose(fp);
     return buffer;
 }
 
 void loadSprites(int c) {
-    spritesLength = 8;
-    sprites = (char**)malloc(sizeof(char*)*spritesLength);
-    sprites[0] = getSpriteFromFile("sprites/dukeofvim");
-    sprites[1] = getSpriteFromFile("sprites/royal");
-    sprites[2] = getSpriteFromFile("sprites/knight");
-    sprites[3] = getSpriteFromFile("sprites/zach");
-    sprites[4] = getSpriteFromFile("sprites/townsquare");
-    sprites[5] = getSpriteFromFile("sprites/forrest");
-    sprites[6] = getSpriteFromFile("sprites/inventory");
-    sprites[7] = getSpriteFromFile("sprites/intro");
+    //spritesLength = 8;
+    //sprites = (char**)malloc(sizeof(char*)*spritesLength);
+    //sprites[0] = getSpriteFromFile("sprites/dukeofvim");
+    //sprites[1] = getSpriteFromFile("sprites/royal");
+    //sprites[2] = getSpriteFromFile("sprites/knight");
+    //sprites[3] = getSpriteFromFile("sprites/zach");
+    //sprites[4] = getSpriteFromFile("sprites/townsquare");
+    //sprites[5] = getSpriteFromFile("sprites/forrest");
+    //sprites[6] = getSpriteFromFile("sprites/inventory");
+    //sprites[7] = getSpriteFromFile("sprites/intro");
 }
 
-static void drawSprite(int num) {
-    if (num >= 0) {
-        printf("%s", sprites[num]);
+static void drawSprite(const char * spritefile) {
+    char spritefilebuf[2048];
+    snprintf(spritefilebuf, sizeof(spritefilebuf), "sprites/%s", spritefile);
+    char* sprite = getSpriteFromFile(spritefilebuf);
+    if (sprite == 0) {
+        printf("Failure reading spritefile: %s, check stderr\n", spritefile);
+    } else {
+        printf("%s", sprite);
+        free(sprite);
     }
 }
 
@@ -172,11 +186,11 @@ static void drawText(const char*text) {
     printf("|\n");
 }
 
-void drawScene(int num, const char* text) {
+void drawScene(const char* spritefile, const char* text) {
     printf("%c[%dJ", 0x1B, 2); // clear screen
     printf("%c[%d;%dH", 0x1B, 1, 1);
-    if (num != -1) {
-        drawSprite(num);
+    if (spritefile != 0 && spritefile[0] != 0) {
+        drawSprite(spritefile);
         drawTextBox(text);
     } else {
         drawText(text);

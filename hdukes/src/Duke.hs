@@ -8,21 +8,36 @@ import Data.List -- intercalate
 import Items as Items
 
 
-data Sprite = NoSprite | Duke | Royal | Knight | Zach | TownSquare | Forrest | InventorySprite | TitleScreen deriving Show
+data Sprite =
+    NoSprite |
+    Duke |
+    Royal |
+    Knight |
+    Zach |
+    TownSquare |
+    Forrest |
+    InventorySprite |
+    TitleScreen |
+    Lake |
+    FeetInLake |
+    Clearing deriving Show
 
 --data State = State CInt String
 
 
-spritesToNum :: Sprite -> CInt
-spritesToNum NoSprite = -1
-spritesToNum Duke = 0
-spritesToNum Royal = 1
-spritesToNum Knight = 2
-spritesToNum Zach = 3
-spritesToNum TownSquare = 4
-spritesToNum Forrest = 5
-spritesToNum InventorySprite = 6
-spritesToNum TitleScreen = 7
+spritesToNum :: Sprite -> String
+spritesToNum NoSprite = ""
+spritesToNum Duke = "dukeofvim"
+spritesToNum Royal = "royal"
+spritesToNum Knight = "knight"
+spritesToNum Zach = "zach"
+spritesToNum TownSquare = "townsquare"
+spritesToNum Forrest = "forrest"
+spritesToNum InventorySprite = "inventory"
+spritesToNum TitleScreen = "intro"
+spritesToNum Lake = "lake"
+spritesToNum FeetInLake = "feetinlake"
+spritesToNum Clearing = "clearing"
 --spritesToNum x = error ("Bad sprite given " ++ show x)
 
 data Scene =
@@ -131,15 +146,17 @@ removeCurrentScene :: State -> State
 removeCurrentScene state@(State {curScenes=(curscene:xs)}) =
     state {curScenes=xs}
 
+addItemToState :: Items.Item -> State -> State
+addItemToState item state@(State {sInv=inv}) =
+    state { sInv=(Items.addItem inv item)}
 
-
-getSprite :: State -> CInt
+getSprite :: State -> String
 getSprite (State {curScenes=((Text sprite text):xs)}) = spritesToNum sprite
 getSprite (State {curScenes=((Choice { cSprite=sprite }):xs)}) = spritesToNum sprite
 getSprite (State {curScenes=((Transition { trSprite=sprite }):xs)}) = spritesToNum sprite
 getSprite state@(State {curScenes=((GenericScene { gSprite=spritefn }):xs)}) = spritesToNum (spritefn state)
 getSprite state@(State {curScenes=((MetaMenuScene { mmSprite=spritefn }):xs)}) = spritesToNum (spritefn state)
-getSprite (State {curScenes=[]}) = -1
+getSprite (State {curScenes=[]}) = ""
 
 getText :: State -> String
 getText (State {curScenes=((Text { teText=text }):xs)}) = formatText text

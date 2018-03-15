@@ -1,7 +1,7 @@
 module Items where
 
 
-data Item = Cookie deriving (Show, Eq)
+data Item = Cookie | RelaxedPoint deriving (Show, Eq)
 
 type Inventory = [Item]
 

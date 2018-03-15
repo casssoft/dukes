@@ -73,7 +73,37 @@ lostatforrest =
     [[
     "You are lost in the forrest.."],
     ["..."],
-    ["You are stil lost in the forrest"]])
+    ["You are stil lost in the forrest"],
+    ["Is that water?"]]) ++
+    [(Text Lake ["You stumbled onto a pristine lake..."]),
+    (Choice Lake ["Do you want to dip your feet in the water?",
+                    "(1) Yes (2) No"]
+    (chooseWithOptions [
+        ('1', feetinwater),
+        ('2', lakescene)]))]
+
+lakescene =
+    [ (Choice Lake ["What a pristine lake...", "(1) Walk back (2) Walk around the lake (3) Dip feet"]
+    (chooseWithOptions [
+        ('1', foundyourwayback),
+        ('2', lostatforrest), -- TODO
+        ('3', feetinwater)]
+        ))]
+
+
+foundyourwayback =
+    [(Text Forrest ["I think the town was this way..."]),
+    (Transition Forrest ["Is that it over there?"]
+        (gotoTransition townsquare))]
+
+feetinwater =
+    [(Text FeetInLake ["You dip your feet in the cool water of the lake."]),
+    (Transition FeetInLake
+        ["It feels nice!",
+        "You gain 1 relaxed point!",
+        " . "]
+        (addItemToState Items.RelaxedPoint .
+        gotoTransition lakescene))]
 
 zachintro =
     (sceneWithSprite Zach
@@ -135,6 +165,7 @@ royalintro =
     (setHasMet Royal . gotoTransition townsquare))]
 
 
+
 -- Knight NPC
 
 knightNormal =
@@ -154,7 +185,6 @@ knightintro =
     "Are you hungry?",
     "I have a cookie I can give you"]]) ++
     [(Transition Knight ["Here's your cookie!"]
-    ((\state@(State {sInv=inv}) ->
-            state{sInv=(Items.addItem inv Items.Cookie)})
+    (addItemToState Items.Cookie
     . gotoTransition townsquare
     . setHasMet Knight))]
