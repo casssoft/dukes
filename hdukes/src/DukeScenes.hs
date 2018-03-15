@@ -112,8 +112,8 @@ walkaroundthelake =
 royallakemet =
     (sceneWithSprite Royal
     [[
-    "~Huh darn they found me~",
-    "Heeey how are you doing?"],
+    "~Huh darn they found me~"],
+    ["Heeey how are you doing?"],
     ["That's cool...",
     "Yeah I'm just hanging out here alone bye"]]) ++
     [(Transition Lake ["I'll just keep walking"]
