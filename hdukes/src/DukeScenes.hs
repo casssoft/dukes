@@ -34,12 +34,14 @@ notMetScenes p
     | p == "Knight" = knightintro
     | p == "Royal" = royalintro
     | p == "Zach" = zachintro
+    | p == "Chimo" = chimointro
 
 hasMetScenes p
     | p == "Duke" = dukeNormal
     | p == "Knight" = knightNormal
     | p == "Royal" = royalNormal
     | p == "Zach" = zachintro
+    | p == "Chimo" = chimoInClearing
 
 setHasMet :: String -> State -> State
 setHasMet person = setHasDone ("met" ++ person)
@@ -50,11 +52,13 @@ ifHasMet person func1 func2 state =
         then func1 state
         else func2 state
 
---npcToScene Zach (NPCState { hasMet = True }) =
---    zachintro
---npcToScene Zach (NPCState { hasMet = False }) =
---    zachintro
+ifHasDone :: String -> (State -> State) -> (State -> State) -> State -> State
+ifHasDone thing func1 func2 state =
+    if stateHasDone thing state
+        then func1 state
+        else func2 state
 
+-- PLACES --
 townsquare =
     [(Choice TownSquare [
     "Welcome to Dukesvile!",
@@ -97,9 +101,20 @@ lakescene =
 
 
 foundyourwayback =
-    [(Text Forrest ["I think the town was this way..."]),
-    (Transition Forrest ["Is that it over there?"]
-        (gotoTransition townsquare))]
+    [(Transition Forrest ["I think the town was this way..."]
+    (ifHasDone "seenClearingOnce"
+        (gotoTransition clearingwithchimo_huh)
+        (setHasDone "seenClearingOnce" . gotoTransition clearing_huh)))]
+
+clearingwithchimo_huh =
+    (Text ClearingWithChimo ["Huh a grassy clearing..."])
+    -- becareful with infinite list!
+        : clearingwithchimo
+
+clearing_huh =
+    (Text Clearing ["Huh a grassy clearing..."])
+        : clearing
+
 
 walkaroundthelake =
     [(Text Lake ["Hmm this lake looks the same from this angle too"]),
@@ -135,6 +150,28 @@ feetinwater =
         (addItemToState Items.RelaxedPoint .
         gotoTransition lakescene))]
 
+clearingwithchimo =
+    [(Choice ClearingWithChimo ["It's clearing in the trees.", "(1) Talk to Chimo (2) Continue walking"]
+    (chooseNPC [
+        ('1', talkTo "Chimo"),
+        ('2', (\s -> townsquare))]))]
+
+clearing =
+    [(Choice Clearing ["It's clearing in the trees.", "(1) Look around (2) Continue walking"]
+    (chooseWithOptions [
+        ('1', lookaroundclearing),
+        ('2', townsquare)]))]
+
+lookaroundclearing =
+    (sceneWithSprite Clearing
+    [[
+    "Hmm an empty clearing..."],
+    ["The grass looks like it's growing greener on this side."]]) ++
+    [(Transition Clearing ["I think I can see the town from here"]
+        (gotoTransition clearing))]
+ 
+
+-- PEOPLE --
 zachintro =
     (sceneWithSprite Zach
     [[
@@ -181,7 +218,7 @@ royalNormal =
     [(Text Royal
         ["Hey...",
         "I'm still pretty busy.."]),
-     (Transition Royal
+    (Transition Royal
         ["Go play in the forrest or something"]
         (gotoTransition townsquare))]
 
@@ -220,3 +257,31 @@ knightintro =
     (addItemToState Items.Cookie
     . gotoTransition townsquare
     . setHasMet "Knight"))]
+
+-- Chimo npc
+
+chimointro =
+    (sceneWithSprite Chimo
+    [[
+    "h e l l o"],
+    ["do i know you?",
+    "..."],
+    ["i guess not.."]]) ++
+    [(Transition ClearingWithChimo ["Hmm..."]
+        (setHasMet "Chimo"
+        . gotoTransition clearingwithchimo))]
+
+chimoInClearing =
+    (sceneWithSprite Chimo
+    [[
+    "h e y"],
+    ["i know you"],
+    ["..."],
+    ["my hands hurt",
+    "..."],
+    ["ive been staring at this stone all day"],
+    ["i know its been moving",
+    "..."],
+    ["i cant seem to find the legs"]]) ++
+    [(Transition ClearingWithChimo ["... I don't see a stone"]
+        (gotoTransition clearingwithchimo))]

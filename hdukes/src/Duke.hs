@@ -22,7 +22,9 @@ data Sprite =
     TitleScreen |
     Lake |
     FeetInLake |
-    Clearing deriving Show
+    Clearing |
+    Chimo |
+    ClearingWithChimo deriving Show
 
 
 spritesToNum :: Sprite -> String
@@ -38,6 +40,8 @@ spritesToNum TitleScreen = "intro"
 spritesToNum Lake = "lake"
 spritesToNum FeetInLake = "feetinlake"
 spritesToNum Clearing = "clearing"
+spritesToNum Chimo = "chimo"
+spritesToNum ClearingWithChimo = "clearingwithchimo"
 --spritesToNum x = error ("Bad sprite given " ++ show x)
 
 data Scene =
@@ -96,6 +100,12 @@ titlescreen =
     (MetaMenuScene
         (\s -> TitleScreen)
         (\s -> [ "Press ' ' to continue!" ])
+        continueWithSpace)
+
+debugscreen =
+    (MetaMenuScene
+        (\s -> NoSprite)
+        (\s -> Set.elems (hasDone s))
         continueWithSpace)
 
 continueWithSpace :: State -> Char -> State
@@ -173,6 +183,9 @@ processScenes slist state 'i' =
 
 processScenes slist state 'h' =
     state {curScenes=(titlescreen : slist)}
+
+processScenes slist state 'd' =
+    state {curScenes=(debugscreen : slist)}
 
 -- do everything else
 processScenes (Text {}:xs) state ch
