@@ -63,10 +63,12 @@ townsquare =
     [(Choice TownSquare [
     "Welcome to Dukesvile!",
     "",
-    "Who do you want to visit?",
-    "the Duke (1) or the Knight (2) or the Royal (3) or Zach10 (4)",
+    "There's a crowd of people over there.",
+    "(1) Talk to the Duke (2) or the Knight",
+    "(3) Talk to the Royal (3) or Zach10 (4)",
     "",
-    "Or you can visit the forrest (f)"]
+    "To the left there are some trees.",
+    "(f) Walk through the trees"]
     (chooseNPC [
         ('1', talkTo "Duke"),
         ('2', talkTo "Knight"),
