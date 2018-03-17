@@ -83,7 +83,7 @@ tinyhut =
     [(Choice TinyHutInside [
     "This is a pretty cute cottage!",
     "",
-    "Someone is in the corner!",
+    "There is someone with a sword standing there!",
     " (1) Talk to the Knight",
     " (2) Walk outside"]
     (chooseNPC [
@@ -174,13 +174,13 @@ feetinwater =
         gotoTransition lakescene))]
 
 clearingwithchimo =
-    [(Choice ClearingWithChimo ["It's clearing in the trees.", "(1) Talk to Chimo (2) Continue walking"]
+    [(Choice ClearingWithChimo ["It's a clearing in the trees.", "(1) Talk to Chimo (2) Continue walking"]
     (chooseNPC [
         ('1', talkTo "Chimo"),
         ('2', (\s -> townsquare))]))]
 
 clearing =
-    [(Choice Clearing ["It's clearing in the trees.", "(1) Look around (2) Continue walking"]
+    [(Choice Clearing ["It's a clearing in the trees.", "(1) Look around (2) Continue walking"]
     (chooseWithOptions [
         ('1', lookaroundclearing),
         ('2', townsquare)]))]
@@ -203,7 +203,7 @@ zachintro =
     [(Transition Zach ["Goodbye"] (gotoTransition townsquare))]
 
 dukeNormal =
-    (sceneWithSprite Duke
+    (sceneWithSprite Duke --TODO if you actually met everyone do something here
     [[
     "Hey",
     "Did you meet everyone yet?"]]) ++ townsquare
@@ -226,6 +226,8 @@ dukeintro =
     [(Transition Duke
     [
     "Ahh I guess you are new here",
+    "Welcome to Dukesville!"],
+    ["There's a bunch of interesting people that live around here.",
     "You should introduce yourself to everyone!"]
     (gotoTransition townsquare))]
     --[(Choice Duke [
