@@ -24,7 +24,9 @@ data Sprite =
     FeetInLake |
     Clearing |
     Chimo |
-    ClearingWithChimo deriving Show
+    ClearingWithChimo |
+    TinyHutInside |
+    BigHouseInside deriving Show
 
 
 spritesToNum :: Sprite -> String
@@ -42,6 +44,8 @@ spritesToNum FeetInLake = "feetinlake"
 spritesToNum Clearing = "clearing"
 spritesToNum Chimo = "chimo"
 spritesToNum ClearingWithChimo = "clearingwithchimo"
+spritesToNum TinyHutInside = "tinyhutinside"
+spritesToNum BigHouseInside = "bighouseinside"
 --spritesToNum x = error ("Bad sprite given " ++ show x)
 
 data Scene =

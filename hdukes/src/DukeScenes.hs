@@ -63,21 +63,42 @@ townsquare =
     [(Choice TownSquare [
     "Welcome to Dukesvile!",
     "",
-    "There's a crowd of people over there.",
-    "(1) Talk to the Duke (2) or the Knight",
-    "(3) Talk to the Royal (3) or Zach10 (4)",
+    "There's someone standing next to the road.",
+    "  (1) Talk to the Duke",
+    "",
+    "There's some houses in the town square.",
+    "  (2) Walk into the tiny cottage",
+    "  (3) Walk into the big house",
     "",
     "To the left there are some trees.",
-    "(f) Walk through the trees"]
+    "  (4) Walk into the trees"]
     (chooseNPC [
         ('1', talkTo "Duke"),
-        ('2', talkTo "Knight"),
-        ('3', talkTo "Royal"),
-        ('4', talkTo "Zach"),
-        ('f', (\s -> lostatforrest))])
---, ('2', knightintro), ('3', kingintro), ('4', zachintro)])
+        ('2', (\s -> tinyhut)),
+        ('3', (\s -> bighouse)),
+        ('4', (\s -> lostatforrest))])
     )]
 
+tinyhut =
+    [(Choice TinyHutInside [
+    "This is a pretty cute cottage!",
+    "",
+    "Someone is in the corner!",
+    " (1) Talk to the Knight",
+    " (2) Walk outside"]
+    (chooseNPC [
+        ('1', talkTo "Knight"),
+        ('2', (\s -> townsquare))]))]
+
+-- TODO add people in the big house
+-- Zach10 is unused and royal only appears around the lake
+bighouse =
+    (sceneWithSprite BigHouseInside
+    [[
+    "Pretty big!"],
+    ["..."]]) ++
+    [(Transition BigHouseInside ["This is awkward I think I should leave."]
+        (gotoTransition townsquare))]
 
 lostatforrest =
     (sceneWithSprite Forrest
@@ -126,7 +147,7 @@ walkaroundthelake =
 royallakemet =
     (sceneWithSprite Royal
     [[
-    "~Huh darn they found me~"],
+    "* ehh who is it now > _ > *"],
     ["Heeey how are you doing?"],
     ["That's cool...",
     "Yeah I'm just hanging out here alone bye"]]) ++
@@ -246,7 +267,7 @@ knightNormal =
     [(Transition Knight
     ["Oh...",
     "You should try it. It's pretty tasty"]
-    (gotoTransition townsquare))]
+    (gotoTransition tinyhut))]
 
 knightintro =
     (sceneWithSprite Knight
@@ -257,7 +278,7 @@ knightintro =
     "I have a cookie I can give you"]]) ++
     [(Transition Knight ["Here's your cookie!"]
     (addItemToState Items.Cookie
-    . gotoTransition townsquare
+    . gotoTransition tinyhut
     . setHasMet "Knight"))]
 
 -- Chimo npc
