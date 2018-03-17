@@ -222,11 +222,11 @@ dukeintro =
     "My name is Dukeling",
     "I'm sure you already know that though"],
     [
-    "Oh you don't?"]]) ++
-    [(Transition Duke
+    "Oh you don't?"],
     [
     "Ahh I guess you are new here",
-    "Welcome to Dukesville!"],
+    "Welcome to Dukesville!"]]) ++
+    [(Transition Duke
     ["There's a bunch of interesting people that live around here.",
     "You should introduce yourself to everyone!"]
     (gotoTransition townsquare))]
