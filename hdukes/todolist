@@ -2,4 +2,6 @@ DONE-Fix hasMet system to be more independent (maybe map of has done strings?)
 DONE-Revisit dukeling dialog to make more sense
 Make adding sprites more automatic (maybe get rid of sprite enum and just use string?)
 Make royal more interesting
+Consider putting clearing somewhere else...
+
 

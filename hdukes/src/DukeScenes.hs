@@ -150,7 +150,8 @@ royallakemet =
     "* ehh who is it now > _ > *"],
     ["Heeey how are you doing?"],
     ["That's cool...",
-    "Yeah I'm just hanging out here alone bye"]]) ++
+    "Yeah I'm just hanging out here alone"],
+    ["bye"]]) ++
     [(Transition Lake ["I'll just keep walking"]
         (gotoTransition lakescene))]
 
@@ -159,7 +160,8 @@ royallakeintro =
     [[
     "Hello I'm Royal",
     "..."],
-    ["Yeah I'm just hanging out here alone bye"]]) ++
+    ["Yeah I'm just hanging out here alone"],
+    ["bye"]]) ++
     [(Transition Lake ["That's rude... I'll just keep walking"]
         (setHasMet "Royal" . gotoTransition lakescene))] --todo should this count as a meeting?
 
@@ -192,7 +194,7 @@ lookaroundclearing =
     ["The grass looks like it's growing greener on this side."]]) ++
     [(Transition Clearing ["I think I can see the town from here"]
         (gotoTransition clearing))]
- 
+
 
 -- PEOPLE --
 zachintro =
