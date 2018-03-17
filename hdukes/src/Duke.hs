@@ -103,7 +103,7 @@ inventoryscene =
 titlescreen =
     (MetaMenuScene
         (\s -> TitleScreen)
-        (\s -> [ "Press ' ' to continue!" ])
+        (\s -> [ "Press space to continue!" ])
         continueWithSpace)
 
 debugscreen =
