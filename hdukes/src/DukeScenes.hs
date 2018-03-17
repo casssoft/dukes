@@ -125,9 +125,9 @@ lakescene =
 
 foundyourwayback =
     [(Transition Forrest ["I think the town was this way..."]
-    (ifHasDone "seenClearingOnce"
+    (ifHasDone "seenClearing"
         (gotoTransition clearingwithchimo_huh)
-        (setHasDone "seenClearingOnce" . gotoTransition clearing_huh)))]
+        (setHasDone "seenClearing" . gotoTransition clearing_huh)))]
 
 clearingwithchimo_huh =
     (Text ClearingWithChimo ["Huh a grassy clearing..."])
