@@ -18,7 +18,7 @@ newState = (State
     Set.empty -- empty hasDone
     )
 
--- NPC logic
+-- NPC met helper logic
 talkTo :: String -> State -> [Scene]
 talkTo person state =
     if stateHasDone ("met" ++ person) state
