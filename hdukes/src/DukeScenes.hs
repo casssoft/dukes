@@ -25,6 +25,13 @@ talkTo person state =
         then hasMetScenes person
         else notMetScenes person
 
+startTalkingScene :: Sprite -> [String] -> String -> Scene
+startTalkingScene sprite dialog person =
+    (Transition sprite dialog (removeCurrentScene .
+    (\s -> s{curScenes=(if stateHasDone ("met" ++ person) s 
+        then hasMetScenes person
+        else notMetScenes person)})))
+
 
 notMetScenes :: String -> [Scene]
 hasMetScenes :: String -> [Scene]
@@ -35,6 +42,7 @@ notMetScenes p
     | p == "Royal" = royalintro
     | p == "Zach" = zachintro
     | p == "Chimo" = chimointro
+    | p == "Jerry" = jerryintro
 
 hasMetScenes p
     | p == "Duke" = dukeNormal
@@ -42,6 +50,7 @@ hasMetScenes p
     | p == "Royal" = royalNormal
     | p == "Zach" = zachintro
     | p == "Chimo" = chimoInClearing
+    | p == "Jerry" = jerryintro2
 
 setHasMet :: String -> State -> State
 setHasMet person = setHasDone ("met" ++ person)
@@ -76,7 +85,11 @@ townsquare =
         ('1', talkTo "Duke"),
         ('2', (\s -> tinyhut)),
         ('3', (\s -> bighouse)),
-        ('4', (\s -> lostatforrest))])
+        ('4', (\s ->
+        if stateHasDone "seenForrest" s
+            then forrestwithhole
+            else lostatforrest))
+        ])
     )]
 
 tinyhut =
@@ -101,9 +114,10 @@ bighouse =
         (gotoTransition townsquare))]
 
 lostatforrest =
+    (Transition Forrest ["You are lost in the forrest.."]
+        (setHasDone "seenForrest" . removeCurrentScene)) :
     (sceneWithSprite Forrest
-    [[
-    "You are lost in the forrest.."],
+    [
     ["..."],
     ["You are stil lost in the forrest"],
     ["Is that water?"]]) ++
@@ -113,6 +127,21 @@ lostatforrest =
     (chooseWithOptions [
         ('1', feetinwater),
         ('2', lakescene)]))]
+
+forrestwithhole =
+    [(Choice ForrestWithHole
+        ["There is a hole next to the road",
+        "(1) Jump in hole (2) Keep going"]
+        (chooseWithOptions [
+            ('1', insideforresthole),
+            ('2', lostatforrest)
+        ]))]
+
+insideforresthole =
+    (sceneWithSprite Dark
+    [
+    ["It's very dark in here..."]]) ++
+    [startTalkingScene Dark ["I hear footsteps!"] "Jerry"]
 
 lakescene =
     [ (Choice Lake ["What a pristine lake...", "(1) Walk back (2) Walk around the lake (3) Dip feet"]
@@ -205,10 +234,20 @@ zachintro =
     [(Transition Zach ["Goodbye"] (gotoTransition townsquare))]
 
 dukeNormal =
-    (sceneWithSprite Duke --TODO if you actually met everyone do something here
-    [[
-    "Hey",
-    "Did you meet everyone yet?"]]) ++ townsquare
+    [(Transition Duke
+    [
+    "Hey!",
+    "Did you meet everyone yet?"]
+    (switchOnHasDone [
+        ("metChimo",
+            [(Text Duke ["Who's Chimo?"])]),
+        ("metRoyal",
+            [(Text Duke ["Oh you met the Royal?", "Yeah he can be rude sometimes."])]),
+        ("metKnight",
+            [(Text Duke ["I heard there was a nice lake somewhere in the forrest"])]),
+        ("",
+            [(Text Duke ["You should try exploring a little bit."])])
+    ]))] ++ townsquare
 
 dukeintro :: [Scene]
 dukeintro =
@@ -221,16 +260,28 @@ dukeintro =
         (removeCurrentScene . (setHasMet "Duke"))) :
     (sceneWithSprite Duke
     [[
-    "My name is Dukeling",
-    "I'm sure you already know that though"],
+    "My name is Dukeling.",
+    "I'm sure you already know that though."],
     [
     "Oh you don't?"],
     [
-    "Ahh I guess you are new here",
-    "Welcome to Dukesville!"]]) ++
+    "Ahh I guess you are new here.",
+    "Welcome to Dukesville!"],
+    [
+    "This town was founded in 1337 by ..."],
+    [
+    "HEY!!!!!"],
+    [
+    "Did you fall asleep?",
+    "That's very rude."],
+    [
+    "I guess you will never know the",
+    "long and detailed history of Dukesville."],
+    ["Anyhow..."]]) ++
     [(Transition Duke
-    ["There's a bunch of interesting people that live around here.",
-    "You should introduce yourself to everyone!"]
+    [
+    "You should introduce yourself to everyone,",
+    "but remember not to be rude!"]
     (gotoTransition townsquare))]
     --[(Choice Duke [
     --"Do you want me to introduce you to",
@@ -312,3 +363,32 @@ chimoInClearing =
     ["i cant seem to find the legs"]]) ++
     [(Transition ClearingWithChimo ["... I don't see a stone"]
         (gotoTransition clearingwithchimo))]
+
+-- Jerry
+
+jerryintro =
+    (sceneWithSprite Jerry
+    [[
+    "Yo what's up?"],
+    ["Yeah it's me Jerry."]]) ++
+    [(Transition Jerry ["Nice to meet you."]
+        (setHasMet "Jerry" . removeCurrentScene))] ++
+        jerryintro2
+
+jerryintro2 =
+    (sceneWithSprite Jerry
+    [[
+    "I don't get how they manage to trick us so bad."],
+    [
+    "Why can't the farmer afford fresh produce?"],
+    [
+    "And why can't the builder afford a house?"],
+    [
+    "The teacher has to get a loan to send their kids to college...",
+    "The flight attendent can't afford to take a vacation..."]]) ++
+    [(Transition Jerry
+    [
+    "I think something's wrong"]
+    (gotoTransition forrestwithhole))]
+
+

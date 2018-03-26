@@ -26,7 +26,10 @@ data Sprite =
     Chimo |
     ClearingWithChimo |
     TinyHutInside |
-    BigHouseInside deriving Show
+    BigHouseInside |
+    Jerry |
+    ForrestWithHole |
+    Dark deriving Show
 
 
 spritesToNum :: Sprite -> String
@@ -46,6 +49,9 @@ spritesToNum Chimo = "chimo"
 spritesToNum ClearingWithChimo = "clearingwithchimo"
 spritesToNum TinyHutInside = "tinyhutinside"
 spritesToNum BigHouseInside = "bighouseinside"
+spritesToNum Jerry = "jerry"
+spritesToNum ForrestWithHole = "forrestwithhole"
+spritesToNum Dark = "dark"
 --spritesToNum x = error ("Bad sprite given " ++ show x)
 
 data Scene =
@@ -140,6 +146,19 @@ chooseNPC ((opch, npcfunc):xs) state@(State {curScenes=(choice:cscenes)}) ch
 gotoTransition :: [Scene] -> State -> State
 gotoTransition newstates state@(State {curScenes=(transition:cscenes)}) =
     state {curScenes=(cscenes ++ newstates)}
+
+switchOnHasDone :: [(String, [Scene])] -> State -> State
+switchOnHasDone [] state = state
+switchOnHasDone ((doneThing, scenes):xs) state@(State {curScenes=(thisscene:curScenes)})
+    | doneThing == "" = state {curScenes=(scenes ++ curScenes)}
+    | stateHasDone doneThing state = state {curScenes=(scenes ++ curScenes)}
+    | otherwise = switchOnHasDone xs state
+
+switchScenes :: [(State -> Bool, [Scene])] -> State -> State
+switchScenes [] state = state
+switchScenes ((boolfunc, scenes):xs) state@(State {curScenes=(thisscene:curScenes)})
+    | boolfunc state = state {curScenes=(scenes ++ curScenes)}
+    | otherwise = switchScenes xs state
 
 removeCurrentScene :: State -> State
 removeCurrentScene state@(State {curScenes=(curscene:xs)}) =
