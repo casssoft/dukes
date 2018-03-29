@@ -3,5 +3,6 @@ DONE-Revisit dukeling dialog to make more sense
 Make adding sprites more automatic (maybe get rid of sprite enum and just use string?)
 Make royal more interesting
 Consider putting clearing somewhere else...
+Make scene system work a bit nicer, shouldn't be so hard to do branching
 
 

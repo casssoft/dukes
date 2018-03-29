@@ -85,11 +85,7 @@ townsquare =
         ('1', talkTo "Duke"),
         ('2', (\s -> tinyhut)),
         ('3', (\s -> bighouse)),
-        ('4', (\s ->
-        if stateHasDone "seenForrest" s
-            then forrestwithhole
-            else lostatforrest))
-        ])
+        ('4', (\s -> lostatforrest))])
     )]
 
 tinyhut =
@@ -118,10 +114,24 @@ lostatforrest =
         (setHasDone "seenForrest" . removeCurrentScene)) :
     (sceneWithSprite Forrest
     [
-    ["..."],
-    ["You are stil lost in the forrest"],
-    ["Is that water?"]]) ++
-    [(Text Lake ["You stumbled onto a pristine lake..."]),
+    ["...",
+    "You are stil lost in the forrest"]]) ++
+    [(Choice Forrest
+        ["(1) Go to the left",
+        "(2) Go straight",
+        "(3) Go to the right",
+        "(4) Try to find your way back"]
+        (chooseWithOptions [
+            ('1', stumbletolake),
+            ('2', stumbletoclearing),
+            ('3', forrestwithhole),
+            ('4', townsquare)]))]
+
+
+stumbletolake =
+    [(Text Forrest
+    ["Is that water?"]),
+    (Text Lake ["You stumbled onto a pristine lake..."]),
     (Choice Lake ["Do you want to dip your feet in the water?",
                     "(1) Yes (2) No"]
     (chooseWithOptions [
@@ -146,7 +156,7 @@ insideforresthole =
 lakescene =
     [ (Choice Lake ["What a pristine lake...", "(1) Walk back (2) Walk around the lake (3) Dip feet"]
     (chooseWithOptions [
-        ('1', foundyourwayback),
+        ('1', lostatforrest),
         ('2', walkaroundthelake), -- TODO
         ('3', feetinwater)]
         ))]
@@ -158,6 +168,11 @@ foundyourwayback =
         (gotoTransition clearingwithchimo_huh)
         (setHasDone "seenClearing" . gotoTransition clearing_huh)))]
 
+stumbletoclearing =
+    [(Transition Forrest ["I hope this is the right direction..."]
+    (ifHasDone "seenClearing"
+        (gotoTransition clearingwithchimo_huh)
+        (setHasDone "seenClearing" . gotoTransition clearing_huh)))]
 clearingwithchimo_huh =
     (Text ClearingWithChimo ["Huh a grassy clearing..."])
     -- becareful with infinite list!
@@ -208,13 +223,13 @@ clearingwithchimo =
     [(Choice ClearingWithChimo ["It's a clearing in the trees.", "(1) Talk to Chimo (2) Continue walking"]
     (chooseNPC [
         ('1', talkTo "Chimo"),
-        ('2', (\s -> townsquare))]))]
+        ('2', (\s -> lostatforrest))]))]
 
 clearing =
     [(Choice Clearing ["It's a clearing in the trees.", "(1) Look around (2) Continue walking"]
     (chooseWithOptions [
         ('1', lookaroundclearing),
-        ('2', townsquare)]))]
+        ('2', lostatforrest)]))]
 
 lookaroundclearing =
     (sceneWithSprite Clearing
