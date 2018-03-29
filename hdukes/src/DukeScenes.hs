@@ -8,6 +8,7 @@ import Data.List -- intercalate
 import Items as Items
 import Duke
 import qualified Data.Set as Set
+import Debug.Trace
 
 
 newState :: State
@@ -27,7 +28,7 @@ talkTo person state =
 
 startTalkingScene :: Sprite -> [String] -> String -> Scene
 startTalkingScene sprite dialog person =
-    (Transition sprite dialog (removeCurrentScene .
+    (Transition sprite dialog (
     (\s -> s{curScenes=(if stateHasDone ("met" ++ person) s 
         then hasMetScenes person
         else notMetScenes person)})))
@@ -50,7 +51,7 @@ hasMetScenes p
     | p == "Royal" = royalNormal
     | p == "Zach" = zachintro
     | p == "Chimo" = chimoInClearing
-    | p == "Jerry" = jerryintro2
+    | p == "Jerry" = jerrytalktoagain
 
 setHasMet :: String -> State -> State
 setHasMet person = setHasDone ("met" ++ person)
@@ -388,9 +389,17 @@ jerryintro =
     ["Yeah it's me Jerry."]]) ++
     [(Transition Jerry ["Nice to meet you."]
         (setHasMet "Jerry" . removeCurrentScene))] ++
-        jerryintro2
+        jerrycaptialismtalk
 
-jerryintro2 =
+
+jerrytalktoagain =
+    [(Transition Jerry ["Yo it's you again"]
+        (switchScenes [
+            ((hasItemInState Items.Cookie), jerryhascookies),
+            ((\s -> True), jerrycaptialismtalk)])
+    )]
+
+jerrycaptialismtalk =
     (sceneWithSprite Jerry
     [[
     "I don't get how they manage to trick us so bad."],
@@ -399,11 +408,51 @@ jerryintro2 =
     [
     "And why can't the builder afford a house?"],
     [
-    "The teacher has to get a loan to send their kids to college...",
-    "The flight attendent can't afford to take a vacation..."]]) ++
+    "The teacher has to get a loan to",
+    "send their kids to college..."],
+    [
+    "The flight attendent can't afford to",
+    "take a vacation..."],
+    [
+    "I used to be a baker but I could",
+    "never afford a cookie..."]]) ++
     [(Transition Jerry
     [
     "I think something's wrong"]
     (gotoTransition forrestwithhole))]
 
+jerryhascookies =
+    [(Choice Jerry [
+    "Oh you have a cookie..",
+    "Can I have it?",
+    "",
+    " (Y) Yes (N) No"]
+    (chooseWithOptions [
+        ('y', jerrygivecookie),
+        ('n', jerryrefusecookie)
+        ])
+    )]
 
+jerrygivecookie =
+    (Transition Jerry ["* munch munch munch *"]
+    (removeCurrentScene .
+    removeItemInState Items.Cookie)) :
+    (sceneWithSprite Jerry
+    [
+    [
+    "Yo that was actually not that tasty."],
+    [
+    "A ton of sugar too... Gross."],
+    [
+    "But thank you so much for the cookie!"]]) ++
+    [(Transition Jerry ["Now I know how it feels to eat cookies..."]
+        (setHasDone "givenCookieToJerry" .
+        gotoTransition forrestwithhole))]
+-- How should I let the player go further???
+
+jerryrefusecookie =
+    (sceneWithSprite Jerry
+    [
+    [
+    "Oh no problem..."]]) ++
+    forrestwithhole

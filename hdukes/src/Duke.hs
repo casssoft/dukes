@@ -7,6 +7,7 @@ import Foreign.C.Types
 import Data.List -- intercalate
 import Items as Items
 import qualified Data.Set as Set
+import Text.Show.Functions
 
 
 
@@ -78,14 +79,14 @@ data Scene =
         mmSprite :: State -> Sprite,
         mmText :: State -> [String],
         mmResolver :: State -> Char -> State
-    }
+    } deriving Show
 
 
 data State = State {
     curScenes :: [Scene],
     sInv :: Items.Inventory,
     hasDone :: Set.Set String -- TODO String or enum?
-}
+} deriving Show
 
 stateHasDone :: String -> State -> Bool
 stateHasDone thing (State {hasDone=doneset}) =
@@ -112,11 +113,27 @@ titlescreen =
         (\s -> [ "Press space to continue!" ])
         continueWithSpace)
 
+wrapLine' :: Int -> String -> [String]
+wrapLine' maxLen line = map unwords $ gobble 0 [] $ words line
+    where
+      gobble :: Int -> [String] -> [String] -> [[String]]
+      gobble k acc [] = [reverse acc]
+      gobble k acc ws@(w:rest) 
+          | l >= maxLen     = reverse acc : [w] : gobble 0 [] rest
+          | k + l >= maxLen = reverse acc       : gobble 0 [] ws
+          | otherwise       = gobble (k + l + 1) (w : acc) rest
+          where l = length w
+
 debugscreen =
     (MetaMenuScene
         (\s -> NoSprite)
-        (\s -> Set.elems (hasDone s))
-        continueWithSpace)
+        (\s -> (Set.elems (hasDone s)) ++ (wrapLine' 50 (show s)))
+        debugOptions)
+
+debugOptions :: State -> Char -> State
+debugOptions state ch
+    | ch == ' ' = removeCurrentScene state
+    | otherwise = state
 
 continueWithSpace :: State -> Char -> State
 continueWithSpace state ch
@@ -167,6 +184,16 @@ removeCurrentScene state@(State {curScenes=(curscene:xs)}) =
 addItemToState :: Items.Item -> State -> State
 addItemToState item state@(State {sInv=inv}) =
     state { sInv=(Items.addItem inv item)}
+
+hasItemInState :: Items.Item -> State -> Bool
+hasItemInState item state@(State {sInv=inv})
+    | (countItem inv item) > 0 = True
+    | otherwise = False
+
+removeItemInState :: Items.Item -> State -> State
+removeItemInState item state@(State {sInv=inv}) =
+    state { sInv=(Items.removeItem inv item) }
+
 
 getSprite :: State -> String
 getSprite (State {curScenes=((Text sprite text):xs)}) = spritesToNum sprite

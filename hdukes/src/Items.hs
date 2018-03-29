@@ -9,6 +9,11 @@ addItem :: Inventory -> Item -> Inventory
 --addItem inv item = inv ++ item
 addItem inv x = x:inv
 
+removeItem :: Inventory -> Item -> Inventory
+removeItem (x:xs) item
+    | x == item = xs
+    | otherwise = x : (removeItem xs item)
+
 countItem :: Inventory -> Item -> Integer
 countItem (x:xs) item
     | x == item = 1 + (countItem xs item)
