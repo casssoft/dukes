@@ -149,10 +149,19 @@ forrestwithhole =
         ]))]
 
 insideforresthole =
-    (sceneWithSprite Dark
-    [
-    ["It's very dark in here..."]]) ++
-    [startTalkingScene Dark ["I hear footsteps!"] "Jerry"]
+    [(Transition Dark ["It's very dark in here..."]
+        (switchScenes [
+            ((stateHasDone "givenCookieAndUnlockPortal", insidehole_choose)),
+            ((\s -> True), [startTalkingScene Dark ["I hear footsteps!"] "Jerry"])]))]
+
+insidehole_choose =
+    [(Choice Dark
+        ["(1) Talk to Jerry (2) Keep going"]
+        (chooseWithOptions [
+            ('1', (hasMetScenes "Jerry")),
+            ('2', deeperintothehole)]))]
+
+deeperintothehole = []
 
 lakescene =
     [ (Choice Lake ["What a pristine lake...", "(1) Walk back (2) Walk around the lake (3) Dip feet"]
@@ -396,8 +405,16 @@ jerrytalktoagain =
     [(Transition Jerry ["Yo it's you again"]
         (switchScenes [
             ((hasItemInState Items.Cookie), jerryhascookies),
-            ((\s -> True), jerrycaptialismtalk)])
+            ((\s -> True), jerrybeeninthishole)])
     )]
+
+jerrybeeninthishole =
+    (sceneWithSpriteThenTransition Jerry
+    [[
+    "Hmm maybe I've been in this hole too long?"],
+    [
+    "Does it still work like that out there?"]]
+    (gotoTransition forrestwithhole))
 
 jerrycaptialismtalk =
     (sceneWithSprite Jerry
@@ -437,17 +454,19 @@ jerrygivecookie =
     (Transition Jerry ["* munch munch munch *"]
     (removeCurrentScene .
     removeItemInState Items.Cookie)) :
-    (sceneWithSprite Jerry
+    (sceneWithSpriteThenTransition Jerry
     [
     [
     "Yo that was actually not that tasty."],
     [
     "A ton of sugar too... Gross."],
     [
-    "But thank you so much for the cookie!"]]) ++
-    [(Transition Jerry ["Now I know how it feels to eat cookies..."]
-        (setHasDone "givenCookieToJerry" .
-        gotoTransition forrestwithhole))]
+    "But thank you so much for the cookie!"],
+    ["Now I know how it feels to eat cookies..."],
+    ["..."],
+    ["Oh btw this hole leads to the Other town..."]]
+    (setHasDone "givenCookieAndUnlockPortal" .
+    gotoTransition insideforresthole))
 -- How should I let the player go further???
 
 jerryrefusecookie =

@@ -148,6 +148,12 @@ sceneWithSprite sprite (x:xs) =
     (Text sprite x):(sceneWithSprite sprite xs)
 sceneWithSprite sprite [] = []
 
+sceneWithSpriteThenTransition :: Sprite -> [[String]] -> (State -> State) -> [Scene]
+sceneWithSpriteThenTransition sprite [x] func =
+    [(Transition sprite x func)]
+sceneWithSpriteThenTransition sprite (x:xs) func =
+    (Text sprite x):(sceneWithSpriteThenTransition sprite xs func)
+
 chooseWithOptions :: [(Char, [Scene])] -> State -> Char -> State
 chooseWithOptions [] state ch = state
 chooseWithOptions ((opch, scenes):xs) state@(State {curScenes=(choice:cscenes)})  ch
