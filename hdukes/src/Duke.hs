@@ -215,7 +215,7 @@ getText (State {curScenes=((Choice { cText=text }):xs)}) = formatText text
 getText (State {curScenes=((Transition { trText=text }):xs)}) = formatText text
 getText state@(State {curScenes=((GenericScene { gText=textfn }):xs)}) = formatText (textfn state)
 getText state@(State {curScenes=((MetaMenuScene { mmText=textfn }):xs)}) = formatText (textfn state)
-getText (State {curScenes=[], sInv=inv}) = "GAME OVER cookies: " ++ (show (Items.countItem inv Items.Cookie))
+getText (State {curScenes=[]}) = "To be continued...\n\nEmail patrickriordan177@gmail.com with ideas"
 --getText (State {}) = error "getText on unknown Scene type"
 
 formatText :: [String] -> String
