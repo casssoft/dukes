@@ -105,10 +105,15 @@ tinyhut =
 bighouse =
     (sceneWithSprite BigHouseInside
     [[
-    "Pretty big!"],
-    ["..."]]) ++
-    [(Transition BigHouseInside ["This is awkward I think I should leave."]
-        (gotoTransition townsquare))]
+    "Pretty big!"]]) ++
+    [(Transition BigHouseInside ["..."]
+        (switchScenes [
+            (stateHasDone "metRoyal", royalinbighouse),
+            ((\s-> True), bighouseshouldleave)]))]
+
+bighouseshouldleave =
+        [(Transition BigHouseInside ["This is awkward I think I should leave."]
+            (gotoTransition townsquare))]
 
 lostatforrest =
     (Transition Forrest ["You are lost in the forrest.."]
@@ -336,6 +341,16 @@ royalintro =
     ["Goodbye"]
     (setHasMet "Royal" . gotoTransition townsquare))]
 
+
+royalinbighouse =
+    (sceneWithSprite Royal
+    [[
+    "Uh yeah this is my house"],
+    [
+    "What are you doing here anyways???",
+    "Are you following me?"]]) ++
+    [(Transition BigHouseInside ["Wow seriously rude...", "I should get out of here."]
+        (gotoTransition townsquare))]
 
 
 -- Knight NPC
