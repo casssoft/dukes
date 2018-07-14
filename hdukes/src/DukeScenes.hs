@@ -307,11 +307,13 @@ dukeintro =
     [
     "I guess you will never know the",
     "long and detailed history of Dukesville."],
-    ["Anyhow..."]]) ++
-    [(Transition Duke
+    ["Anyhow..."],
     [
     "You should introduce yourself to everyone,",
-    "but remember not to be rude!"]
+    "but remember not to be rude!"]]) ++
+    [(Transition Duke
+    ["And don't forgot about me!",
+    "Come back and say hi once in a while"]
     (gotoTransition townsquare))]
     --[(Choice Duke [
     --"Do you want me to introduce you to",
