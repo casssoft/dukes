@@ -4,6 +4,7 @@ import System.IO
 import Termios as Termios
 import Duke as Duke
 import DukeScenes as DukeScenes
+import InitialTown as IT
 import Control.Monad (when)
 
 
@@ -11,7 +12,7 @@ import Control.Monad (when)
 main = do
     Termios.set_conio_terminal_mode 0
     Termios.loadSprites 0
-    run_state DukeScenes.newState
+    run_state IT.newState
     Termios.reset_terminal_mode 0
 
 
